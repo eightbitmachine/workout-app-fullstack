@@ -2,11 +2,11 @@ import { type User, findActiveUser } from "./users";
 
 const isValidEmail = (email: string) => {
   if (!email) {
-    return { value: email, error: "EMPTY" };
+    return { value: email, error: "EMAIL_EMPTY" };
   }
 
   if (!email.includes("@")) {
-    return { value: email, error: "FORMAT" };
+    return { value: email, error: "EMAIL_FORMAT" };
   }
 
   return { value: email, error: null };
@@ -14,7 +14,7 @@ const isValidEmail = (email: string) => {
 
 const isValidPassword = (password: string) => {
   if (!password) {
-    return { value: password, error: "EMPTY" };
+    return { value: password, error: "PASSWORD_EMPTY" };
   }
 
   if (password.length <= 5) {
