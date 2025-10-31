@@ -54,7 +54,7 @@ const validateCredential = (
       return result;
     })
     .catch(() => {
-      return { value: credential, error: "NOT_FOUND" };
+      return { value: credential, error: "USER_NOT_FOUND" };
     });
 };
 

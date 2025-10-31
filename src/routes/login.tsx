@@ -7,7 +7,6 @@ export const Route = createFileRoute('/login')({
 
 function RouteComponent() {
   return <div>
-    <div>Hello "/login"!</div>
-    <LoginForm email="" errors={[]} />
+    <LoginForm />
   </div>
 }
