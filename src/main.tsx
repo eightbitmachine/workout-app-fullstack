@@ -11,6 +11,8 @@ declare module '@tanstack/react-router' {
   }
 }
 
+import './style.css';
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <RouterProvider router={router} />
