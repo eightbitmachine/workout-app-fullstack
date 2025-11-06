@@ -71,4 +71,8 @@ const login = (credential: Credential) => {
   });
 };
 
-export { createCredential, validateCredential, login, type Credential };
+const logout = (email: string) => {
+  return Promise.resolve({ value: email, ok: true, error: null });
+};
+
+export { createCredential, validateCredential, login, logout, type Credential };

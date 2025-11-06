@@ -1,4 +1,10 @@
-import { useState, useRef, useContext, type FormEventHandler, type FormEvent } from "react";
+import {
+  useState,
+  useRef,
+  useContext,
+  type FormEventHandler,
+  type FormEvent,
+} from "react";
 import { useRouter } from "@tanstack/react-router";
 import { createCredential, login, type Credential } from "../core/auth";
 import { UserContext } from "./UserContext";
@@ -23,7 +29,7 @@ type LoginFormProps = {
 };
 
 const LoginForm = ({ loginHandler }: LoginFormProps) => {
-  const {setCurrentUser} = useContext(UserContext); 
+  const { setCurrentUser } = useContext(UserContext);
   const [isWaiting, setIsWaiting] = useState(false);
   const [error, setError] = useState<string>();
   const [email, setEmail] = useState<string>();
@@ -53,18 +59,24 @@ const LoginForm = ({ loginHandler }: LoginFormProps) => {
     if (credentialResult.error == null) {
       const credential = credentialResult.value;
 
-      loginHandler(credential).then((result) => {
-        if (result.error === null) {
-          setCurrentUser(result.value);
-          router.navigate({ to: "/dashboard" }).then(() => {});
-        } else {
-          console.log(result);
-        }
-      });
+      loginHandler(credential)
+        .then((result) => {
+          if (result.error === null) {
+            setCurrentUser(result.value);
+            router.navigate({ to: "/dashboard" }).then(() => { });
+          } else {
+            setEmail(formEmail);
+            setError(result.error);
+            console.log(result);
+          }
+        })
+        .finally(() => {
+          setIsWaiting(false);
+        });
     } else {
+      setIsWaiting(false);
       setEmail(formEmail);
-      setError(humanErrorMessage[credentialResult.error]);
-
+      setError(credentialResult.error);
       console.log(credentialResult);
     }
   };
