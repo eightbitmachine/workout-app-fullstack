@@ -71,4 +71,4 @@ const login = (credential: Credential) => {
   });
 };
 
-export { createCredential, validateCredential, login };
+export { createCredential, validateCredential, login, type Credential };
