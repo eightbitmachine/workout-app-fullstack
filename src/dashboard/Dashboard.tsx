@@ -21,7 +21,7 @@ const Dashboard = () => {
   return <div>
     <header>
       <nav>
-        <a onClick={handleLogout}>Logout</a>
+        <button onClick={handleLogout} className="cursor-pointer">Logout</button>
       </nav>
     </header>
 
