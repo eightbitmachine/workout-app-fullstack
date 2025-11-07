@@ -1,5 +1,6 @@
-import { Kysely } from "kysely";
+import { Kysely, sql } from "kysely";
 import { type Database } from "../schema.js";
+import { hashPassword } from "../../auth.js";
 
 process.loadEnvFile("../.env");
 // When using kysely-ctl, it will be from the root of the `server` directory, so only one level up
@@ -14,10 +15,18 @@ export async function seed(db: Kysely<Database>): Promise<void> {
     .values([
       {
         email: "coach@example.com",
-        password_hash: "..",
+        password_hash: await hashPassword("coach-123"),
         type: "COACH",
+        modified_at: new Date(),
+        deleted_at: sql`NULL`,
       },
-      { email: "athlete@example.com", password_hash: "..", type: "COACH" },
+      {
+        email: "athlete@example.com",
+        password_hash: await hashPassword("athelete-987"),
+        type: "ATHLETE",
+        modified_at: new Date(),
+        deleted_at: sql`NULL`,
+      },
     ])
     .execute();
 }
