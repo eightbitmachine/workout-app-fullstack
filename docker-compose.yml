@@ -5,7 +5,7 @@ services:
     restart: unless-stopped 
     env_file: ".env"
     healthcheck:
-      test: ['CMD-SHELL', "sh -c 'pg_isready -U postgres -d postgres'"]
+      test: ['CMD-SHELL', "sh -c 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB'"]
       interval: 3s
       timeout: 3s
       retries: 10
