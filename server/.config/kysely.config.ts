@@ -41,7 +41,7 @@ export default defineConfig({
     migrationFolder: "../src/db/migrations",
   },
   //   plugins: [],
-  //   seeds: {
-  //     seedFolder: "seeds",
-  //   }
+  seeds: {
+    seedFolder: "../src/db/seeds",
+  },
 });
