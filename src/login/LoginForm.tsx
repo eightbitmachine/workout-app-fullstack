@@ -6,7 +6,7 @@ import {
   type FormEvent,
 } from "react";
 import { useRouter } from "@tanstack/react-router";
-import { createCredential, login, type Credential } from "../core/auth";
+import { createCredential, login, type Credential } from "../../core/auth";
 import { UserContext } from "./UserContext";
 
 interface FormElements extends HTMLFormControlsCollection {

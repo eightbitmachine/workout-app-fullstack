@@ -58,7 +58,9 @@ const validateCredential = (
     });
 };
 
+// TODO: Update with API to `/auth/login` using POST and FormData (Maybe change API to take JSON instead)
 const login = (credential: Credential) => {
+  // TODO: Validate credentials needs to send a request to the API
   return validateCredential(findActiveUser, credential).then((result) => {
     if (!result.error) {
       console.log("Logged In");

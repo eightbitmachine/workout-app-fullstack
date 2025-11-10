@@ -1,6 +1,6 @@
 import { useContext } from "react"
 import { UserContext } from "../login/UserContext"
-import { logout } from "../core/auth";
+import { logout } from "../../core/auth";
 import { useRouter } from "@tanstack/react-router";
 
 
