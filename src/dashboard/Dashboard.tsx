@@ -1,19 +1,15 @@
 import { useContext } from "react"
 import { UserContext } from "../login/UserContext"
-import { logout } from "../../core/auth";
-import { useRouter } from "@tanstack/react-router";
+import { useLogout } from "../login/api";
 
 
 const Dashboard = () => {
-  const { currentUser, setCurrentUser } = useContext(UserContext);
-  const router = useRouter();
+  const { currentUser } = useContext(UserContext);
+  const logout = useLogout();
 
   const handleLogout = () => {
     if (currentUser) {
-      logout(currentUser?.email).then(() => {
-        setCurrentUser(null);
-        router.navigate({ to: "/login" })
-      });
+      logout();
     }
   }
 

@@ -1,80 +1,56 @@
-import { type User, findActiveUser } from "./users";
+type Credential = { email: string; password: string };
+type CredentialError =
+  | "EMAIL_EMPTY"
+  | "EMAIL_FORMAT"
+  | "PASSWORD_EMPTY"
+  | "PASSWORD_LENGTH_SHORT";
 
-const isValidEmail = (email: string) => {
+const isValidEmail = (
+  email: string
+): { ok: true } | { ok: false; error: CredentialError } => {
   if (!email) {
-    return { value: email, error: "EMAIL_EMPTY" };
+    return { ok: false, error: "EMAIL_EMPTY" };
   }
 
   if (!email.includes("@")) {
-    return { value: email, error: "EMAIL_FORMAT" };
+    return { ok: false, error: "EMAIL_FORMAT" };
   }
 
-  return { value: email, error: null };
+  return { ok: true };
 };
 
-const isValidPassword = (password: string) => {
+const isValidPassword = (
+  password: string
+): { ok: true } | { ok: false; error: CredentialError } => {
   if (!password) {
-    return { value: password, error: "PASSWORD_EMPTY" };
+    return { ok: false, error: "PASSWORD_EMPTY" };
   }
 
   if (password.length <= 5) {
-    return { value: password, error: "PASSWORD_LENGTH_SHORT" };
+    return { ok: false, error: "PASSWORD_LENGTH_SHORT" };
   }
 
-  return { value: password, error: null };
+  return { ok: true };
 };
-
-type Credential = { email: string; password: string };
 
 const createCredential = (
   email: string,
-  password: string,
-): { value: Credential; error: null } | { value: string; error: string } => {
+  password: string
+):
+  | { ok: true; credential: Credential }
+  | { ok: false; error: CredentialError } => {
   const validateEmailResult = isValidEmail(email);
-  if (validateEmailResult.error) {
+  if (!validateEmailResult.ok) {
     return validateEmailResult;
   }
 
   const validatePasswordResult = isValidPassword(password);
-  if (validatePasswordResult.error) {
+  if (!validatePasswordResult.ok) {
     return validatePasswordResult;
   }
 
-  return { value: { email, password }, error: null };
+  return { ok: true, credential: { email, password } };
 };
 
-const validateCredential = (
-  findUser: (
-    email: Credential["email"],
-  ) => Promise<{ value: string; error: string } | { value: User; error: null }>,
-  credential: Credential,
-) => {
-  return findUser(credential.email)
-    .then((result) => {
-      return result;
-    })
-    .catch(() => {
-      return { value: credential, error: "USER_NOT_FOUND" };
-    });
-};
 
-// TODO: Update with API to `/auth/login` using POST and FormData (Maybe change API to take JSON instead)
-const login = (credential: Credential) => {
-  // TODO: Validate credentials needs to send a request to the API
-  return validateCredential(findActiveUser, credential).then((result) => {
-    if (!result.error) {
-      console.log("Logged In");
-    } else {
-      console.log("Invalid User");
-    }
-
-    // TODO Maybe return more login specific result
-    return result;
-  });
-};
-
-const logout = (email: string) => {
-  return Promise.resolve({ value: email, ok: true, error: null });
-};
-
-export { createCredential, validateCredential, login, logout, type Credential };
+export { createCredential, type Credential, type CredentialError };

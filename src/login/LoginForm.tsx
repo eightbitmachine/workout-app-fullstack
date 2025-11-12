@@ -1,13 +1,10 @@
 import {
   useState,
   useRef,
-  useContext,
   type FormEventHandler,
   type FormEvent,
 } from "react";
-import { useRouter } from "@tanstack/react-router";
-import { createCredential, login, type Credential } from "../../core/auth";
-import { UserContext } from "./UserContext";
+import { createCredential, type Credential } from "../../core/auth";
 
 interface FormElements extends HTMLFormControlsCollection {
   email: HTMLInputElement;
@@ -20,7 +17,7 @@ interface LoginFormElement extends HTMLFormElement {
 
 type LoginHandlerFunction = (
   credential: Credential
-) => ReturnType<typeof login>;
+) => unknown;
 
 // Parse, don't validate
 // TODO: Extract error and login handler so this is dumber component (presentational only)
@@ -29,12 +26,9 @@ type LoginFormProps = {
 };
 
 const LoginForm = ({ loginHandler }: LoginFormProps) => {
-  const { setCurrentUser } = useContext(UserContext);
-  const [isWaiting, setIsWaiting] = useState(false);
   const [error, setError] = useState<string>();
   const [email, setEmail] = useState<string>();
   const emailInputRef = useRef(null);
-  const router = useRouter();
 
   const humanErrorMessage: { [index: string]: string } = {
     EMAIL_FORMAT:
@@ -49,45 +43,28 @@ const LoginForm = ({ loginHandler }: LoginFormProps) => {
     event: FormEvent<LoginFormElement>
   ) => {
     event.preventDefault();
-    setIsWaiting(true);
 
     const formData = new FormData(event.currentTarget);
-    const formEmail = formData.get("email")?.toString() || "";
-    const formPassword = formData.get("password")?.toString() || "";
-    const credentialResult = createCredential(formEmail, formPassword);
+    const email = formData.get("email")?.toString() || "";
+    const password = formData.get("password")?.toString() || "";
+    const credentialResult = createCredential(email, password);
 
-    if (credentialResult.error == null) {
-      const credential = credentialResult.value;
-
-      loginHandler(credential)
-        .then((result) => {
-          if (result.error === null) {
-            setCurrentUser(result.value);
-            router.navigate({ to: "/dashboard" }).then(() => { });
-          } else {
-            setEmail(formEmail);
-            setError(result.error);
-            console.log(result);
-          }
-        })
-        .finally(() => {
-          setIsWaiting(false);
-        });
-    } else {
-      setIsWaiting(false);
-      setEmail(formEmail);
+    if (!credentialResult.ok) {
+      setEmail(email);
       setError(credentialResult.error);
-      console.log(credentialResult);
-    }
+    } else {
+      loginHandler(credentialResult.credential)
+    } 
   };
+
 
   return (
     <form
       onSubmit={handleSubmit}
       className="border border-gray-700 rounded border-solid p-8"
     >
-      <div className="text-base mb-8 flex flex-row gap-4 justify-between">
-        <label htmlFor="email" className="text-right">
+      <div className="text-base mb-8 flex flex-row gap-4 justify-between items-center ">
+        <label htmlFor="email" className="text-right block">
           Email
         </label>
         <input
@@ -99,6 +76,7 @@ const LoginForm = ({ loginHandler }: LoginFormProps) => {
           className="border border-solid border-gray-600 text-black"
         />
       </div>
+      {(error?.startsWith('EMAIL_')) ? <div className="p-2 bg-red-400">{humanErrorMessage[error]}</div>:''}
       <div className="text-base mb-8 flex flex-row gap-4 justify-between">
         <label htmlFor="password" className="text-right">
           Password
@@ -110,16 +88,10 @@ const LoginForm = ({ loginHandler }: LoginFormProps) => {
           className="border border-solid border-gray-600 text-black"
         ></input>
       </div>
-
-      <div
-        data-testid="login-error"
-        className={error ? "p-2 bg-red-800 text-white" : "hidden"}
-      >
-        {error ? humanErrorMessage[error] : ""}
-      </div>
+      {(error?.startsWith('PASSWORD_')) ? <div className="p-2 bg-red-400 text-white">{humanErrorMessage[error]}</div>:''}
 
       <div>
-        <button type="submit">{isWaiting ? "Logging in" : "Login"}</button>
+        <button type="submit">Login</button>
       </div>
     </form>
   );

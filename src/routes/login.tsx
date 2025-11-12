@@ -1,40 +1,41 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { login, type Credential } from "../../core/auth";
-import { LoginForm } from "../login/LoginForm";
+import { useContext } from "react";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+
+import { type Credential } from "../../core/auth";
 import { useLogin } from "../login/api";
+
+import { LoginForm } from "../login/LoginForm";
+import { UserContext } from "../login/UserContext";
+import { saveToken } from "../core/auth";
 
 export const Route = createFileRoute("/login")({
   component: RouteComponent,
 });
 
-// TODO: Consider using a reducer via `useReduce` to 
-// manage the different states:
-// - Not Logged In
-// - Unsuccessful Log In
-// - Successful Login (store token in localStorage)
-// Form states such as invalid input should be kept local to the form.
-// The form itself does not need to be aware of what we're doing after login.
 function RouteComponent() {
-  // TODO: Perhaps the `login` needs to be via something like `useLogin` that
-  // will run the fetch as an effect and return a dispatch action?
+  const { setCurrentUser } = useContext(UserContext);
+  const mutation = useLogin();
+  const router = useRouter();
 
-  // For localStorage, we can use a third-party useLocalStorage hook 
-  // and perhaps we have some root/app level state that we'll track the locally
-  // stored token in
-
-  // The `login` method used here would have to change. If we change `login` (maybe renamed to `useLogin`) to run a fetch request,
-  // then we need a wrapper around it that can deal with the UI things like state updates/dispatcher etc 
-  // instead of running the effect directly/imperatively
-
-  const loginMutation = useLogin();
+  const handleLogin = (credential: Credential) => {
+    mutation.mutate(credential, {
+      onSuccess(data) {
+        if (data.ok) {
+          setCurrentUser(data.user);
+          saveToken(data.token);
+          router.navigate({ to: "/dashboard" });
+          // setTimeout(() => { router.navigate({ to: "/dashboard" }) }, 375)
+        }
+      },
+    });
+  }
 
   return (
     <div>
-      {(loginMutation.isSuccess) ? <output>{JSON.stringify(loginMutation.data)}</output> : ''}
-      <LoginForm loginHandler={(credential: Credential) => {
-        loginMutation.mutate(credential);
-        return login(credential);
-      }} />
+      {mutation.isPending ? <div>Logging in&hellip;</div> : ''}
+      {mutation.isSuccess ? <div>Logged in! Redirecting to Dashboard&hellip;</div> : ''}
+      {mutation.isError ? <div>We were not able to log you in. Please check the credentials that you've provided.</div> : ''}
+      {(mutation.isIdle || mutation.isError) ? <LoginForm loginHandler={handleLogin} /> : ''}
     </div>
   );
 }
