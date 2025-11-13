@@ -11,28 +11,52 @@ import { authRoutes } from "./routes/auth.js";
 
 type System = {
   env?: NodeJS.ProcessEnv;
-  db?: Kysely<Database>;
+  db?: Pool;
+  queryBuilder?: Kysely<Database>;
   server?: Server;
 };
 
-const startDatabase = (system: System) => {
+const startQueryBuilder = (system: System) => {
+  if (!system.db) {
+    return undefined;
+  }
+
   const dialect = new PostgresDialect({
-    pool: new Pool({
-      user: system?.env?.POSTGRES_USER || "",
-      password: system?.env?.POSTGRES_PASSWORD || "",
-      database: system?.env?.POSTGRES_DB || "",
-      host: "localhost",
-      port: 5432,
-    }),
+    pool: system.db,
   });
 
-  const db = new Kysely<Database>({ dialect });
+  const queryBuilder = new Kysely<Database>({ dialect });
 
-  return db;
+  return queryBuilder;
 };
 
-const stopDatabase = (db: Kysely<Database> | null | undefined) => {
-  db?.destroy();
+const stopQueryBuilder = (queryBuilder?: Kysely<Database>) => {
+  queryBuilder?.destroy();
+};
+
+// TODO: Confiure some kind of timeout?
+// Because the page response hangs if we do a request when the db is shutdown.
+const startDatabase = (system: System) => {
+  const connectionPool = new Pool({
+    user: system?.env?.POSTGRES_USER || "",
+    password: system?.env?.POSTGRES_PASSWORD || "",
+    database: system?.env?.POSTGRES_DB || "",
+    host: "localhost",
+    port: 5432,
+  });
+
+  // NOTE: Kysely itself asserts that it's only a query builder and doesn't offer any documentation on error handling.
+  // They note that all they do is pass on any errors
+  // I've added this just so things don't slip away for now
+  connectionPool.on("error", (err, client) => {
+    console.log(`Postgres Error ${err.message}\n${err.stack}`);
+  });
+
+  return connectionPool;
+};
+
+const stopDatabase = (connectionPool?: Pool) => {
+  connectionPool?.end();
 };
 
 const startServer = (system: System) => {
@@ -58,6 +82,7 @@ const startServer = (system: System) => {
 
   server.addListener("close", () => {
     console.log("Closing the DB");
+    stopQueryBuilder(system.queryBuilder);
     stopDatabase(system.db);
   });
 
@@ -71,6 +96,7 @@ const stopServer = (server: Server) => {
 const startSystem = (): System => {
   let system: System = { env: process.env }; // NOTE: We must use `node --with-env-file` or `tsx --with-env--file`
   system = { db: startDatabase(system), ...system };
+  system = { queryBuilder: startQueryBuilder(system), ...system };
   system = { server: startServer(system), ...system };
   console.log(system);
   return system;

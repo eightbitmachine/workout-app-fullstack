@@ -13,7 +13,7 @@ const loginHandler = async (system: System, c: Context) => {
   const password = formData.get("password")?.toString() || "";
 
   const credentialResult = createCredential(email, password);
-  if (credentialResult.error) {
+  if (!credentialResult.ok) {
     c.status(400);
     return c.json({
       ok: false,
@@ -21,7 +21,7 @@ const loginHandler = async (system: System, c: Context) => {
     });
   }
 
-  const foundUserResult = await findUser(system.db, { email });
+  const foundUserResult = await findUser(system.queryBuilder, { email });
 
   if (foundUserResult.error) {
     c.status(400);
@@ -57,7 +57,7 @@ const loginHandler = async (system: System, c: Context) => {
         type: user?.type,
       },
       // TODO: The `token` should be saved to session or local storage in the client
-      token
+      token,
     });
   }
 };

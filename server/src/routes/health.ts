@@ -5,11 +5,10 @@ const healthRoutes = (system: System) => {
   const app = new Hono();
 
   app.get("/", (c) => {
-    return c.json({ status: "ok", env: system.env });
+    return c.json({ status: "ok" });
   });
 
   return app;
 };
 
-export { healthRoutes }
-
+export { healthRoutes };

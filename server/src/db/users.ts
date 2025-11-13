@@ -1,5 +1,6 @@
 import { Kysely } from "kysely";
 import { type Database } from "./schema.js";
+import type { DatabaseError } from "pg";
 
 type UserType = "COACH" | "ATHLETE";
 
@@ -12,10 +13,10 @@ type User = {
 
 // : Promise<{ok: false, error: Error} | { ok: true, user: User | undefined}>
 const findUser = async (
-  db: Kysely<Database> | undefined,
+  queryBuilder: Kysely<Database> | undefined,
   params: { id?: number; email?: string; type?: UserType },
 ) => {
-  if (!db) {
+  if (!queryBuilder) {
     return Promise.resolve({ ok: false, error: new Error("DB_NONE") });
   }
 
@@ -23,7 +24,7 @@ const findUser = async (
     return Promise.resolve({ ok: false, error: new Error("PARAMS_NONE") });
   }
 
-  let query = await db
+  let query = queryBuilder
     .withSchema("workout_db")
     .selectFrom("users")
     .select(["id", "email", "type", "password_hash"]);
@@ -42,11 +43,16 @@ const findUser = async (
     );
   }
 
-  return query.executeTakeFirst().then((result) => {
-    return result
-      ? { ok: true, user: result }
-      : { ok: false, error: new Error("USER_NOT_FOUND") };
-  });
+  return query
+    .executeTakeFirst()
+    .then((result) => {
+      return result
+        ? { ok: true, user: result }
+        : { ok: false, error: new Error("USER_NOT_FOUND") };
+    })
+    .catch((error: DatabaseError) => {
+      return { ok: false, error: error };
+    });
 };
 
 export { type UserType, type User, findUser };
