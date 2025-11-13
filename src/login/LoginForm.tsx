@@ -1,9 +1,4 @@
-import {
-  useState,
-  useRef,
-  type FormEventHandler,
-  type FormEvent,
-} from "react";
+import { useState, useRef, type FormEventHandler, type FormEvent } from "react";
 import { createCredential, type Credential } from "../../core/auth";
 
 interface FormElements extends HTMLFormControlsCollection {
@@ -15,9 +10,7 @@ interface LoginFormElement extends HTMLFormElement {
   readonly elements: FormElements;
 }
 
-type LoginHandlerFunction = (
-  credential: Credential
-) => unknown;
+type LoginHandlerFunction = (credential: Credential) => unknown;
 
 // Parse, don't validate
 // TODO: Extract error and login handler so this is dumber component (presentational only)
@@ -53,18 +46,17 @@ const LoginForm = ({ loginHandler }: LoginFormProps) => {
       setEmail(email);
       setError(credentialResult.error);
     } else {
-      loginHandler(credentialResult.credential)
-    } 
+      loginHandler(credentialResult.credential);
+    }
   };
-
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="border border-gray-700 rounded border-solid p-8"
+      className="border-2 border-slate-200 rounded border-solid p-8 flex flex-col"
     >
-      <div className="text-base mb-8 flex flex-row gap-4 justify-between items-center ">
-        <label htmlFor="email" className="text-right block">
+      <div className="text-base mb-2 gap-2 flex flex-col items-start">
+        <label htmlFor="email" className="block font-semi-bold">
           Email
         </label>
         <input
@@ -73,25 +65,34 @@ const LoginForm = ({ loginHandler }: LoginFormProps) => {
           id="email"
           name="email"
           type="email"
-          className="border border-solid border-gray-600 text-black"
+          className="border border-solid border-slate-200 rounded text-black"
         />
       </div>
-      {(error?.startsWith('EMAIL_')) ? <div className="p-2 bg-red-400">{humanErrorMessage[error]}</div>:''}
-      <div className="text-base mb-8 flex flex-row gap-4 justify-between">
-        <label htmlFor="password" className="text-right">
+      {error?.startsWith("EMAIL_") ? (
+        <div className="text-red-400 mb-2">{humanErrorMessage[error]}</div>
+      ) : (
+        ""
+      )}
+      <div className="text-base mb-2 gap-2 flex flex-col items-start">
+        <label htmlFor="password" className="block font-semi-bold">
           Password
         </label>
         <input
           id="password"
           name="password"
           type="password"
-          className="border border-solid border-gray-600 text-black"
+          className="border border-solid border-slate-200 rounded text-black"
         ></input>
       </div>
-      {(error?.startsWith('PASSWORD_')) ? <div className="p-2 bg-red-400 text-white">{humanErrorMessage[error]}</div>:''}
-
-      <div>
-        <button type="submit">Login</button>
+      {error?.startsWith("PASSWORD_") ? (
+        <div className="text-red-400 mb-2">{humanErrorMessage[error]}</div>
+      ) : (
+        ""
+      )}
+      <div className="flex flex-row">
+        <button type="submit" className="bg-blue-500">
+          Login
+        </button>
       </div>
     </form>
   );

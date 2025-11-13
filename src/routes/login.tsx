@@ -8,6 +8,8 @@ import { LoginForm } from "../login/LoginForm";
 import { UserContext } from "../login/UserContext";
 import { saveToken } from "../core/auth";
 
+import "../style.css";
+
 export const Route = createFileRoute("/login")({
   component: RouteComponent,
 });
@@ -28,14 +30,31 @@ function RouteComponent() {
         }
       },
     });
-  }
+  };
 
   return (
-    <div>
-      {mutation.isPending ? <div>Logging in&hellip;</div> : ''}
-      {mutation.isSuccess ? <div>Logged in! Redirecting to Dashboard&hellip;</div> : ''}
-      {mutation.isError ? <div>We were not able to log you in. Please check the credentials that you've provided.</div> : ''}
-      {(mutation.isIdle || mutation.isError) ? <LoginForm loginHandler={handleLogin} /> : ''}
+    <div className="w-3/5 flex flex-col flex-wrap text-left">
+      {mutation.isPending ? <div>Logging in&hellip;</div> : ""}
+      {mutation.isSuccess ? (
+        <div>Logged in! Redirecting to Dashboard&hellip;</div>
+      ) : (
+        ""
+      )}
+      {mutation.isError ? (
+        <div className="mb-2 border-2 border-solid rounded border-amber-400 bg-amber-100 p-2">
+          <p className="font-bold text-lg text-amber-950">
+            We were unable to log you in.
+          </p>
+          <p> Please check the credentials that you've provided.</p>
+        </div>
+      ) : (
+        ""
+      )}
+      {mutation.isIdle || mutation.isError ? (
+        <LoginForm loginHandler={handleLogin} />
+      ) : (
+        ""
+      )}
     </div>
   );
 }
