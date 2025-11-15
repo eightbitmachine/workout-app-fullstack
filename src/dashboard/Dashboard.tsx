@@ -1,14 +1,12 @@
 import { useContext } from "react"
-import { UserContext } from "../login/UserContext"
-import { useLogout } from "../login/api";
+import { AuthContext } from "../core/auth/context"
 
 
 const Dashboard = () => {
-  const { currentUser } = useContext(UserContext);
-  const logout = useLogout();
+  const { currentUser, logout } = useContext(AuthContext);
 
   const handleLogout = () => {
-    if (currentUser) {
+    if (logout) {
       logout();
     }
   }
