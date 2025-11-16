@@ -6,7 +6,7 @@ import { type User } from "../../../core/users.ts";
 import { type Credential } from "../../../core/auth.ts";
 
 import { AuthContext } from "./context.tsx";
-import { deleteToken, loadDecodedToken, saveToken } from "./token.ts";
+import { deleteToken, isAliveToken, loadDecodedToken, saveToken } from "./token.ts";
 import { fetchAuthLogin, type LoginResponse } from "./api.ts";
 
 export const AuthProvider = ({ children }: { children?: ReactNode }) => {
@@ -30,11 +30,28 @@ export const AuthProvider = ({ children }: { children?: ReactNode }) => {
 
   const logout = () => {
     if (currentUser) {
+      login.reset(); // Clear the Login query result
       setCurrentUser(null);
       deleteToken();
-      redirect({ to: "/login" });
+      redirect({
+        to: "/login",
+        search: { redirect: '' }
+      });
     }
   };
+
+  const isAuthenticated = () => {
+    const tokenPayload = loadDecodedToken();
+    console.log(`Token Payload ${tokenPayload?.email} ${tokenPayload?.exp}`);
+
+    if (!tokenPayload) {
+      return false;
+    }
+
+    const isAliveResult = isAliveToken(tokenPayload);
+    console.log('isAlive', isAliveResult);
+    return (tokenPayload !== null && isAliveResult.ok == true)
+  }
 
   useEffect(() => {
     const token = loadDecodedToken();
@@ -48,7 +65,7 @@ export const AuthProvider = ({ children }: { children?: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext value={{ currentUser, setCurrentUser, login, logout }}>
+    <AuthContext value={{ currentUser, setCurrentUser, login, logout, isAuthenticated: isAuthenticated }}>
       {children}
     </AuthContext>
   );
