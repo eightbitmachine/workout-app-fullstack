@@ -1,4 +1,8 @@
 import { startSystem } from "./system.js";
 
-startSystem();
+const system = startSystem();
 
+export default {
+  port: system.env?.PORT,
+  fetch: system.server?.fetch,
+};

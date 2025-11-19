@@ -2,8 +2,6 @@ import { Kysely, PostgresDialect } from "kysely";
 import { Pool } from "pg";
 import { type Database } from "./db/schema.js";
 
-import type { Server } from "net";
-import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { healthRoutes } from "./routes/health.js";
@@ -13,7 +11,7 @@ type System = {
   env?: NodeJS.ProcessEnv;
   db?: Pool;
   queryBuilder?: Kysely<Database>;
-  server?: Server;
+  server?: Hono;
 };
 
 const startQueryBuilder = (system: System) => {
@@ -70,23 +68,13 @@ const startServer = (system: System) => {
   app.route("/health", healthRoutes(system));
   app.route("/auth", authRoutes(system));
 
-  const server = serve(
-    {
-      fetch: app.fetch, // `fetch` is the entrypoint into a Hono app
-      port: process.env.PORT ? parseInt(process.env.PORT) : undefined,
-    },
-    (info) => {
-      console.log(`Server is running on http://localhost:${info.port}`);
-    },
-  );
-
-  server.addListener("close", () => {
-    console.log("Closing the DB");
-    stopQueryBuilder(system.queryBuilder);
-    stopDatabase(system.db);
-  });
-
-  return server;
+  // server.addListener("close", () => {
+  //   console.log("Closing the DB");
+  //   stopQueryBuilder(system.queryBuilder);
+  //   stopDatabase(system.db);
+  // });
+  //
+  return app;
 };
 
 const stopServer = (server: Server) => {
