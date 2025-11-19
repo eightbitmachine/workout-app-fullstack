@@ -11,7 +11,7 @@ type System = {
   env?: NodeJS.ProcessEnv;
   db?: Pool;
   queryBuilder?: Kysely<Database>;
-  server?: Hono;
+  server?: Bun.Server<Hono>;
 };
 
 const startQueryBuilder = (system: System) => {
@@ -68,17 +68,18 @@ const startServer = (system: System) => {
   app.route("/health", healthRoutes(system));
   app.route("/auth", authRoutes(system));
 
-  // server.addListener("close", () => {
-  //   console.log("Closing the DB");
-  //   stopQueryBuilder(system.queryBuilder);
-  //   stopDatabase(system.db);
-  // });
-  //
-  return app;
+  const server = Bun.serve<Hono>({
+    port: system.env?.PORT !== undefined ? parseInt(system.env.PORT) : 3000,
+    fetch: app.fetch,
+  });
+
+  // Graceful Shutdown Handling
+  // See <https://github.com/orgs/honojs/discussions/3731>
+  return server;
 };
 
-const stopServer = (server: Server) => {
-  server?.close();
+const stopServer = (server: Bun.Server<Hono>) => {
+  return server.stop();
 };
 
 const startSystem = (): System => {
@@ -91,13 +92,21 @@ const startSystem = (): System => {
 };
 
 const stopSystem = (system: System) => {
-  if (system.db) {
-    stopDatabase(system.db);
-  }
+  const tasks = [];
 
-  if (system.server) {
-    stopServer(system.server);
-  }
+  tasks.push(() => {
+    if (system.db) {
+      return Promise.resolve(stopDatabase(system.db));
+    }
+  });
+
+  tasks.push(() => {
+    if (system.server) {
+      stopServer(system.server);
+    }
+  });
+
+  return Promise.all(tasks);
 };
 
 export { startSystem, stopSystem, type System };
