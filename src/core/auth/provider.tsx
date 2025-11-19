@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, type PropsWithChildren } from "react";
 import { useMutation } from "@tanstack/react-query";
 
 import { type User } from "../../../core/users.ts";
@@ -9,7 +9,7 @@ import { deleteToken, isAliveToken, loadDecodedToken, saveToken } from "./token.
 import { fetchAuthLogin, type LoginResponse } from "./api.ts";
 
 
-export const AuthProvider = ({ children }: { children?: ReactNode }) => {
+export const AuthProvider = ({ children }: PropsWithChildren) => {
   // Load the current User from the session (token in localStorage) is one is present.
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
