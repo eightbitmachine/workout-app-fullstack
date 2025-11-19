@@ -1,13 +1,17 @@
 import { useContext } from "react"
+import { useNavigate } from "@tanstack/react-router"
+
 import { AuthContext } from "../core/auth/context"
 
 
 const Dashboard = () => {
-  const { currentUser, logout } = useContext(AuthContext);
+  const { currentUser, logout } = useContext(AuthContext)!;
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     if (logout) {
       logout();
+      navigate({ to: '/login' })
     }
   }
 

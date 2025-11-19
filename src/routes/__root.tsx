@@ -2,40 +2,25 @@ import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { type QueryClient } from "@tanstack/react-query";
 
-import { AuthProvider } from "../core/auth/provider";
-import { type User } from "../../core/users";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      // throwOnError: true
-    },
-    mutations: {
-      // thrownOnError: true
-    },
-  },
-});
+import { type AuthState } from "../core/auth/context";
 
 const RootLayout = () => {
   // TODO: Package loading the user into custom context provider or hook?
   //
   return (
     <>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <Outlet />
-          <TanStackRouterDevtools />
-        </AuthProvider>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
+      <Outlet />
+      <TanStackRouterDevtools position="bottom-right" />
+      <ReactQueryDevtools buttonPosition="top-right" initialIsOpen={false} />
     </>
   );
 };
 
 interface AppRouterContext {
-  auth: { user: User };
+  auth: AuthState;
+  queryClient: QueryClient;
 }
 
 export const Route = createRootRouteWithContext<AppRouterContext>()({

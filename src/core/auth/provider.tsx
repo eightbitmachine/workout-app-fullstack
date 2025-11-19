@@ -1,6 +1,5 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { redirect } from "@tanstack/react-router";
 
 import { type User } from "../../../core/users.ts";
 import { type Credential } from "../../../core/auth.ts";
@@ -8,6 +7,7 @@ import { type Credential } from "../../../core/auth.ts";
 import { AuthContext } from "./context.tsx";
 import { deleteToken, isAliveToken, loadDecodedToken, saveToken } from "./token.ts";
 import { fetchAuthLogin, type LoginResponse } from "./api.ts";
+
 
 export const AuthProvider = ({ children }: { children?: ReactNode }) => {
   // Load the current User from the session (token in localStorage) is one is present.
@@ -22,22 +22,18 @@ export const AuthProvider = ({ children }: { children?: ReactNode }) => {
       if (data.ok) {
         setCurrentUser(data.user);
         saveToken(data.token);
-        redirect({ to: "/dashboard" });
-        // setTimeout(() => { router.navigate({ to: "/dashboard" }) }, 375)
       }
     },
   });
 
   const logout = () => {
-    if (currentUser) {
-      login.reset(); // Clear the Login query result
-      setCurrentUser(null);
-      deleteToken();
-      redirect({
-        to: "/login",
-        search: { redirect: '' }
-      });
-    }
+    return new Promise(() => {
+      if (currentUser) {
+        login.reset(); // Clear the Login mutation query result
+        setCurrentUser(null);
+        deleteToken();
+      }
+    })
   };
 
   const isAuthenticated = () => {
@@ -45,6 +41,7 @@ export const AuthProvider = ({ children }: { children?: ReactNode }) => {
     console.log(`Token Payload ${tokenPayload?.email} ${tokenPayload?.exp}`);
 
     if (!tokenPayload) {
+      console.error("Empty payload");
       return false;
     }
 

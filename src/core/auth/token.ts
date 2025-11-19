@@ -1,7 +1,7 @@
 import type { User } from "@core/users";
 import { jwtDecode, type JwtPayload } from "jwt-decode";
 
-const TOKEN_NAME = "token";
+const TOKEN_NAME = "eighbitmachine.workoutapp.token";
 
 export function saveToken(token: string) {
   return window.localStorage.setItem(TOKEN_NAME, token);
@@ -36,12 +36,12 @@ export function decodeToken(token: string) {
 // TODO: Needs a unit test
 export function isAliveToken(decodedToken: UserPayload) {
   const now = Math.floor(Date.now() / 1000);
-  const isExpired = decodedToken.exp && now >= decodedToken.exp;
+  const isExpired = decodedToken.exp && now > decodedToken.exp;
   if (isExpired) {
     return { ok: false, error: new Error("TOKEN_EXPIRE") };
   }
 
-  const isBefore = decodedToken.nbf && now <= decodedToken.nbf;
+  const isBefore = decodedToken.nbf && now < decodedToken.nbf;
   if (isBefore) {
     return { ok: false, error: new Error("TOKEN_NOT_BEFORE") };
   }

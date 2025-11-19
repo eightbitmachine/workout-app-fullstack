@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { type Credential } from "../../core/auth";
 
@@ -12,13 +13,21 @@ export const Route = createFileRoute("/login")({
 });
 
 function RouteComponent() {
-  const { login: loginMutation } = useAuth();
+  const { login: loginMutation } = useAuth()!;
+  const navigate = useNavigate();
 
   const handleLogin = (credential: Credential) => {
     if (loginMutation) {
       loginMutation.mutate(credential);
     }
   };
+
+  useEffect(() => {
+    if (loginMutation.isSuccess) {
+      navigate({ to: '/dashboard' })
+    }
+  }, [navigate, loginMutation.isSuccess])
+
 
   return (
     <div className="w-3/5 flex flex-col flex-wrap text-left">
