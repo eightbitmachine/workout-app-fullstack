@@ -2,6 +2,8 @@ import { Kysely, PostgresDialect } from "kysely";
 import { Pool } from "pg";
 import { type Database } from "./db/schema.js";
 
+import type { Server } from "net";
+import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { healthRoutes } from "./routes/health.js";
@@ -11,7 +13,7 @@ type System = {
   env?: NodeJS.ProcessEnv;
   db?: Pool;
   queryBuilder?: Kysely<Database>;
-  server?: Bun.Server<Hono>;
+  server?: Server;
 };
 
 const startQueryBuilder = (system: System) => {
@@ -29,7 +31,8 @@ const startQueryBuilder = (system: System) => {
 };
 
 const stopQueryBuilder = (queryBuilder?: Kysely<Database>) => {
-  queryBuilder?.destroy();
+  console.log("Stopping Query Builder...");
+  return queryBuilder?.destroy();
 };
 
 // TODO: Confiure some kind of timeout?
@@ -54,7 +57,8 @@ const startDatabase = (system: System) => {
 };
 
 const stopDatabase = (connectionPool?: Pool) => {
-  connectionPool?.end();
+  console.log("Stopping database...");
+  return connectionPool?.end();
 };
 
 const startServer = (system: System) => {
@@ -68,18 +72,30 @@ const startServer = (system: System) => {
   app.route("/health", healthRoutes(system));
   app.route("/auth", authRoutes(system));
 
-  const server = Bun.serve<Hono>({
-    port: system.env?.PORT !== undefined ? parseInt(system.env.PORT) : 3000,
-    fetch: app.fetch,
-  });
+  const server = serve(
+    {
+      fetch: app.fetch, // `fetch` is the entrypoint into a Hono app
+      port: process.env.PORT ? parseInt(process.env.PORT) : undefined,
+    },
+    (info) => {
+      console.log(`Server is running on http://localhost:${info.port}`);
+    },
+  );
 
-  // Graceful Shutdown Handling
-  // See <https://github.com/orgs/honojs/discussions/3731>
   return server;
 };
 
-const stopServer = (server: Bun.Server<Hono>) => {
-  return server.stop();
+const stopServer = (server: Server) => {
+  console.log("Stopping HTTP server...");
+  const closePromise = new Promise<Server>((resolve) => {
+    server.on("close", resolve);
+    server?.close();
+  });
+
+  return closePromise.then((server) => {
+    console.log("Server closed...");
+    return server;
+  });
 };
 
 const startSystem = (): System => {
@@ -87,26 +103,13 @@ const startSystem = (): System => {
   system = { db: startDatabase(system), ...system };
   system = { queryBuilder: startQueryBuilder(system), ...system };
   system = { server: startServer(system), ...system };
-  console.log(system);
   return system;
 };
 
 const stopSystem = (system: System) => {
-  const tasks = [];
-
-  tasks.push(() => {
-    if (system.db) {
-      return Promise.resolve(stopDatabase(system.db));
-    }
-  });
-
-  tasks.push(() => {
-    if (system.server) {
-      stopServer(system.server);
-    }
-  });
-
-  return Promise.all(tasks);
+  return (system.server ? stopServer(system.server) : Promise.resolve(() => {}))
+    .then(() => stopQueryBuilder(system.queryBuilder))
+    .then(() => stopDatabase(system.db));
 };
 
 export { startSystem, stopSystem, type System };

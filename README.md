@@ -1,14 +1,32 @@
 # Coaching Platform App
 
+## Frontend
+
+```sh
+bun dev
+```
+
 ## Backend 
+
 
 ### Server 
 
 Hono
 
+```sh
+cd server
+bun dev
+```
+
 ### Database
 
 Postgres 17 (See [docker-compose](./docker-compose.yml))
+
+#### Running the Database
+
+```sh
+docker-compose up -d 
+```
 
 #### Configuration
 
