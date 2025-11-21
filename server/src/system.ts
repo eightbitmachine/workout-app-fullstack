@@ -1,20 +1,13 @@
+import type { Server } from "net";
+
 import { Kysely, PostgresDialect } from "kysely";
 import { Pool } from "pg";
 import { type Database } from "./db/schema.js";
 
-import type { Server } from "net";
 import { serve } from "@hono/node-server";
-import { Hono } from "hono";
-import { cors } from "hono/cors";
-import { healthRoutes } from "./routes/health.js";
-import { authRoutes } from "./routes/auth.js";
 
-type System = {
-  env?: NodeJS.ProcessEnv;
-  db?: Pool;
-  queryBuilder?: Kysely<Database>;
-  server?: Server;
-};
+import type { System } from "./types.js";
+import { app } from "./app.js";
 
 const startQueryBuilder = (system: System) => {
   if (!system.db) {
@@ -62,19 +55,9 @@ const stopDatabase = (connectionPool?: Pool) => {
 };
 
 const startServer = (system: System) => {
-  const app = new Hono();
-
-  app.use("*", cors());
-  app.get("/", (c) => {
-    return c.text("Hello Hono!");
-  });
-
-  app.route("/health", healthRoutes(system));
-  app.route("/auth", authRoutes(system));
-
   const server = serve(
     {
-      fetch: app.fetch, // `fetch` is the entrypoint into a Hono app
+      fetch: app(system).fetch, // `fetch` is the entrypoint into a Hono app
       port: process.env.PORT ? parseInt(process.env.PORT) : undefined,
     },
     (info) => {
