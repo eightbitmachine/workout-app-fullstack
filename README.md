@@ -6,10 +6,9 @@
 bun dev
 ```
 
-## Backend 
+## Backend
 
-
-### Server 
+### Server
 
 Hono
 
@@ -25,7 +24,7 @@ Postgres 17 (See [docker-compose](./docker-compose.yml))
 #### Running the Database
 
 ```sh
-docker-compose up -d 
+docker-compose up -d
 ```
 
 #### Configuration
@@ -49,9 +48,10 @@ pnpm kysely migrate:up
 # Undo migrations
 pnpm kysely migrate:down
 ```
+
 #### Initialise Data
 
-Use `kysely-ctl`'s seed feature to load fake data. The seed data is located at `server/src/db/seed` 
+Use `kysely-ctl`'s seed feature to load fake data. The seed data is located at `server/src/db/seed`
 
 ```sh
 # list seed files
@@ -72,5 +72,14 @@ Endpoints can be tested simply using `httpie`.
 
 ```sh
 # Sending a FormData request
-http post -f localhost:3001/auth/login email=coach@example.com password=123456 
+http post -f localhost:3001/auth/login email=coach@example.com password=123456
+```
+
+```sh
+# Authenticating with a Token
+http -A bearer -a base64.jwt.token.value get localhost:3001/programs
+
+# Requests with invalid tokens, or with no token, to gated endpoints should get a 401 response
+http -A bearer -a base64.wrong.token.value get localhost:3001/programs
+http get localhost:3001/programs
 ```
